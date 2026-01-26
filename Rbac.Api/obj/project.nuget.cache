@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "z3VlYSn2Kjg=",
+  "dgSpecHash": "yPTGNI8LB+o=",
   "success": true,
   "projectFilePath": "C:\\ProjetoC#\\Rbac.Api\\Rbac.Api.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\eudes\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\eudes\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\eudes\\.nuget\\packages\\microsoft.aspnetcore.openapi\\8.0.23\\microsoft.aspnetcore.openapi.8.0.23.nupkg.sha512",
     "C:\\Users\\eudes\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\6.0.0\\microsoft.bcl.asyncinterfaces.6.0.0.nupkg.sha512",

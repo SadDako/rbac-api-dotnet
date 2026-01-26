@@ -109,3 +109,4 @@ C:\ProjetoC#\Rbac.Api\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.Workspaces.reso
 C:\ProjetoC#\Rbac.Api\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.Workspaces.resources.dll
 C:\ProjetoC#\Rbac.Api\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.resources.dll
 C:\ProjetoC#\Rbac.Api\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\ProjetoC#\Rbac.Api\obj\Debug\net8.0\Rbac.Api.sourcelink.json
