@@ -20,10 +20,28 @@ public class UsersController : ControllerBase
         _dbContext = dbContext;
     }
 
+    // Diagnóstico: mostra claims recebidas
+    // Pode remover depois
+    [HttpGet("debug-claims")]
+    public IActionResult DebugClaims()
+    {
+        return Ok(new
+        {
+            isAuthenticated = User.Identity?.IsAuthenticated,
+            authType = User.Identity?.AuthenticationType,
+            claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList()
+        });
+    }
+
+    // Perfil do usuário logado
     [HttpGet("me")]
     public async Task<ActionResult<UserProfileResponse>> Me(CancellationToken cancellationToken)
     {
-        var userIdValue = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        // tenta sub, depois NameIdentifier (quando o runtime mapeia sub para NameIdentifier)
+        var userIdValue =
+            User.FindFirstValue(JwtRegisteredClaimNames.Sub) ??
+            User.FindFirstValue(ClaimTypes.NameIdentifier);
+
         if (!Guid.TryParse(userIdValue, out var userId))
         {
             return Unauthorized(new { message = "Token inválido." });
@@ -37,7 +55,7 @@ public class UsersController : ControllerBase
 
         if (user is null)
         {
-            return NotFound();
+            return NotFound(new { message = "Usuário não encontrado." });
         }
 
         var response = new UserProfileResponse
@@ -49,5 +67,23 @@ public class UsersController : ControllerBase
         };
 
         return Ok(response);
+    }
+
+    // Lista usuários (somente Admin)
+    [HttpGet]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> List(CancellationToken cancellationToken)
+    {
+        var users = await _dbContext.Users
+            .AsNoTracking()
+            .Select(u => new
+            {
+                u.Id,
+                u.Email,
+                u.Name
+            })
+            .ToListAsync(cancellationToken);
+
+        return Ok(users);
     }
 }

@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using Rbac.Api.Domain.Entities;
 using Rbac.Api.Infrastructure.Data;
 using Rbac.Api.Options;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -18,12 +20,22 @@ var jwtSection = builder.Configuration.GetSection("Jwt");
 builder.Services.Configure<JwtOptions>(jwtSection);
 
 var jwtOptions = jwtSection.Get<JwtOptions>() ?? new JwtOptions();
-if (string.IsNullOrWhiteSpace(jwtOptions.Key))
+
+if (string.IsNullOrWhiteSpace(jwtOptions.Key)
+    || string.IsNullOrWhiteSpace(jwtOptions.Issuer)
+    || string.IsNullOrWhiteSpace(jwtOptions.Audience))
 {
-    throw new InvalidOperationException("JWT key is missing.");
+    throw new InvalidOperationException("JWT settings are missing (Key/Issuer/Audience).");
 }
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+// HS256 exige chave com no mínimo 32 bytes
+if (Encoding.UTF8.GetByteCount(jwtOptions.Key) < 32)
+{
+    throw new InvalidOperationException("JWT key must be at least 32 bytes for HS256.");
+}
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -32,11 +44,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+
             ValidIssuer = jwtOptions.Issuer,
             ValidAudience = jwtOptions.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
-            RoleClaimType = "role",
-            NameClaimType = JwtRegisteredClaimNames.Sub
+
+            // Você usa sub como "identidade" principal
+            NameClaimType = JwtRegisteredClaimNames.Sub,
+            // Roles padrão do .NET
+            RoleClaimType = ClaimTypes.Role,
+
+            // Evita erro chato de relógio em dev
+            ClockSkew = TimeSpan.Zero
         };
     });
 
@@ -52,7 +71,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Informe o token JWT no formato: Bearer {token}"
+        Description = "Cole assim: Bearer {seu_token}"
     };
 
     options.AddSecurityDefinition("Bearer", securityScheme);
@@ -74,7 +93,6 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -82,6 +100,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -90,7 +109,13 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
     await SeedRolesAsync(dbContext);
+
+    if (app.Environment.IsDevelopment())
+    {
+        await SeedDefaultAdminAsync(dbContext);
+    }
 }
 
 app.Run();
@@ -98,6 +123,7 @@ app.Run();
 static async Task SeedRolesAsync(AppDbContext dbContext)
 {
     var roleNames = new[] { "Admin", "User" };
+
     var existingRoles = await dbContext.Roles
         .Select(role => role.Name)
         .ToListAsync();
@@ -114,4 +140,53 @@ static async Task SeedRolesAsync(AppDbContext dbContext)
     }
 
     await dbContext.SaveChangesAsync();
+}
+
+static async Task SeedDefaultAdminAsync(AppDbContext dbContext)
+{
+    const string adminEmail = "admin@rbac.local";
+    const string adminName = "Admin";
+    const string adminPassword = "Admin@123";
+
+    var adminRole = await dbContext.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
+    if (adminRole is null)
+    {
+        adminRole = new Role { Name = "Admin" };
+        dbContext.Roles.Add(adminRole);
+        await dbContext.SaveChangesAsync();
+    }
+
+    var adminUser = await dbContext.Users
+        .Include(u => u.UserRoles)
+        .ThenInclude(ur => ur.Role)
+        .FirstOrDefaultAsync(u => u.Email == adminEmail);
+
+    if (adminUser is null)
+    {
+        adminUser = new User
+        {
+            Name = adminName,
+            Email = adminEmail,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword)
+        };
+
+        dbContext.Users.Add(adminUser);
+        await dbContext.SaveChangesAsync();
+    }
+
+    // Garante vínculo com role Admin
+    var alreadyAdmin = await dbContext.UserRoles
+        .Include(ur => ur.Role)
+        .AnyAsync(ur => ur.UserId == adminUser.Id && ur.Role.Name == "Admin");
+
+    if (!alreadyAdmin)
+    {
+        dbContext.UserRoles.Add(new UserRole
+        {
+            UserId = adminUser.Id,
+            RoleId = adminRole.Id
+        });
+
+        await dbContext.SaveChangesAsync();
+    }
 }

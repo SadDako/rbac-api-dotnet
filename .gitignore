@@ -1,8 +1,21 @@
+# build output
 bin/
 obj/
+out/
+publish/
+
+# IDEs
 .vs/
+.vscode/
+.idea/
 *.user
 *.suo
-*.cache
+
+# logs/cache
 *.log
+*.cache
+
+# secrets
 appsettings.Development.json
+appsettings.*.json
+.env

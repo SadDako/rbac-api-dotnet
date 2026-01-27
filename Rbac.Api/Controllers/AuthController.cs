@@ -3,8 +3,8 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Rbac.Api.Contracts.Auth;
 using Rbac.Api.Domain.Entities;
 using Rbac.Api.Infrastructure.Data;
@@ -77,15 +77,12 @@ public class AuthController : ControllerBase
         }
 
         var token = CreateToken(user);
-
         return Ok(token);
     }
 
     private AuthResponse CreateToken(User user)
     {
-        var expiresMinutes = _jwtOptions.ExpiresMinutes > 0
-            ? _jwtOptions.ExpiresMinutes
-            : 60;
+        var expiresMinutes = _jwtOptions.ExpiresMinutes > 0 ? _jwtOptions.ExpiresMinutes : 60;
 
         if (string.IsNullOrWhiteSpace(_jwtOptions.Key)
             || string.IsNullOrWhiteSpace(_jwtOptions.Issuer)
@@ -97,12 +94,13 @@ public class AuthController : ControllerBase
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Email, user.Email)
+            new(JwtRegisteredClaimNames.Email, user.Email),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
         foreach (var role in user.UserRoles.Select(ur => ur.Role.Name))
         {
-            claims.Add(new Claim("role", role));
+            claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key));
