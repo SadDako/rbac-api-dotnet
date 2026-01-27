@@ -1,8 +1,14 @@
-bin/
-obj/
-.vs/
-*.user
-*.suo
-*.cache
-*.log
-appsettings.Development.json
+# .NET
+**/bin/
+**/obj/
+*.dll
+*.exe
+*.pdb
+
+# Node
+**/node_modules/
+**/dist/
+
+# OS
+.DS_Store
+Thumbs.db
