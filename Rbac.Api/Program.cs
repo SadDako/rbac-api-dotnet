@@ -49,7 +49,7 @@ builder.Services
             ValidAudience = jwtOptions.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
 
-            // Você usa sub como "identidade" principal
+            // Uso sub como "identidade" principal
             NameClaimType = JwtRegisteredClaimNames.Sub,
             // Roles padrão do .NET
             RoleClaimType = ClaimTypes.Role,
