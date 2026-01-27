@@ -8,9 +8,9 @@ public class InMemoryUserStore : IUserStore
 {
     private readonly IConfiguration _config;
 
-    private static readonly List<User> Users = new();
-    private static readonly List<Role> Roles = new();
-    private static readonly List<UserRole> UserRoles = new();
+    private readonly List<User> _users = new();
+    private readonly List<Role> _roles = new();
+    private readonly List<UserRole> _userRoles = new();
 
     public InMemoryUserStore(IConfiguration config)
     {
@@ -19,56 +19,56 @@ public class InMemoryUserStore : IUserStore
 
     public Task<User?> FindByEmailAsync(string email)
     {
-        var user = Users.FirstOrDefault(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+        var user = _users.FirstOrDefault(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(user);
     }
 
     public Task<User?> FindByIdAsync(Guid id)
     {
-        var user = Users.FirstOrDefault(u => u.Id == id);
+        var user = _users.FirstOrDefault(u => u.Id == id);
         return Task.FromResult(user);
     }
 
     public Task<bool> EmailExistsAsync(string email)
     {
-        var exists = Users.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+        var exists = _users.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(exists);
     }
 
     public Task CreateUserAsync(User user)
     {
-        Users.Add(user);
+        _users.Add(user);
         return Task.CompletedTask;
     }
 
     public Task EnsureRoleExistsAsync(string roleName)
     {
-        if (!Roles.Any(r => r.Name == roleName))
-            Roles.Add(new Role { Id = Guid.NewGuid(), Name = roleName });
+        if (!_roles.Any(r => r.Name == roleName))
+            _roles.Add(new Role { Id = Guid.NewGuid(), Name = roleName });
 
         return Task.CompletedTask;
     }
 
     public Task AddRoleToUserAsync(Guid userId, string roleName)
     {
-        var role = Roles.FirstOrDefault(r => r.Name == roleName);
+        var role = _roles.FirstOrDefault(r => r.Name == roleName);
         if (role is null)
         {
             role = new Role { Id = Guid.NewGuid(), Name = roleName };
-            Roles.Add(role);
+            _roles.Add(role);
         }
 
-        var exists = UserRoles.Any(ur => ur.UserId == userId && ur.RoleId == role.Id);
+        var exists = _userRoles.Any(ur => ur.UserId == userId && ur.RoleId == role.Id);
         if (!exists)
-            UserRoles.Add(new UserRole { UserId = userId, RoleId = role.Id });
+            _userRoles.Add(new UserRole { UserId = userId, RoleId = role.Id });
 
         return Task.CompletedTask;
     }
 
     public Task<IReadOnlyList<string>> GetUserRolesAsync(Guid userId)
     {
-        var roleIds = UserRoles.Where(ur => ur.UserId == userId).Select(ur => ur.RoleId).ToHashSet();
-        var names = Roles.Where(r => roleIds.Contains(r.Id)).Select(r => r.Name).ToList();
+        var roleIds = _userRoles.Where(ur => ur.UserId == userId).Select(ur => ur.RoleId).ToHashSet();
+        var names = _roles.Where(r => roleIds.Contains(r.Id)).Select(r => r.Name).ToList();
         return Task.FromResult((IReadOnlyList<string>)names);
     }
 

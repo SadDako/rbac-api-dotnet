@@ -63,7 +63,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Informe o token JWT no formato: Bearer {token}"
+        Description = "Informe apenas o token JWT (sem prefixo Bearer)"
     };
 
     options.AddSecurityDefinition("Bearer", securityScheme);
