@@ -8,8 +8,20 @@ using Microsoft.OpenApi.Models;
 using Rbac.Api.Domain.Entities;
 using Rbac.Api.Infrastructure.Data;
 using Rbac.Api.Options;
+using Rbac.Api.Application.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("dev", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -17,7 +29,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddControllers();
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
+builder.Services.AddScoped<Rbac.Api.Application.Auth.AuthService>();
 builder.Services.Configure<JwtOptions>(jwtSection);
+builder.Services.AddScoped<AuthService>();
 
 var jwtOptions = jwtSection.Get<JwtOptions>() ?? new JwtOptions();
 
@@ -99,11 +113,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
+
+app.UseCors("dev");
 
 app.UseAuthentication();
+
 app.UseAuthorization();
 
+// Map controllers 
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
@@ -117,6 +135,9 @@ using (var scope = app.Services.CreateScope())
         await SeedDefaultAdminAsync(dbContext);
     }
 }
+
+// Health check simples
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.Run();
 

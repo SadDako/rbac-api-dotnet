@@ -1,7 +1,19 @@
+import { useState } from "react";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+
 export default function App() {
-  return (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-      <div>Front rodando ✅</div>
-    </div>
+  const [logged, setLogged] = useState(!!localStorage.getItem("token"));
+
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("me");
+    setLogged(false);
+  }
+
+  return logged ? (
+    <Dashboard onLogout={logout} />
+  ) : (
+    <Login onLogged={() => setLogged(true)} />
   );
 }
