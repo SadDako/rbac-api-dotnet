@@ -1,15 +1,10 @@
 import { API_BASE_URL } from "./config";
 
-export function getToken() {
-  return localStorage.getItem("token");
-}
-
 export async function apiFetch(path: string, options: RequestInit = {}) {
-  const token = getToken();
+  const token = localStorage.getItem("token");
 
   const headers = new Headers(options.headers || {});
-  headers.set("Content-Type", "application/json");
-
+  if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });

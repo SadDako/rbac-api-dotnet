@@ -1,64 +1,64 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../api";
+import { useAuth } from "../auth/AuthContext";
 
-export default function Login({ onLogged }: { onLogged: () => void }) {
+export default function Login() {
+  const nav = useNavigate();
+  const { login } = useAuth();
+
   const [email, setEmail] = useState("admin@rbac.local");
   const [password, setPassword] = useState("Admin@123");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
       const res = await apiFetch("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("me", JSON.stringify(data));
-      onLogged();
+      login(data);
+      nav("/", { replace: true });
     } catch (err: any) {
-      setError(err?.message || "Erro ao logar");
+      setError(err?.message || "Erro ao entrar");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ padding: 24, fontFamily: "system-ui", maxWidth: 420 }}>
-      <h1>Login</h1>
-
-      <form onSubmit={submit}>
-        <div style={{ marginBottom: 12 }}>
-          <label>Email</label>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{ width: "100%", padding: 10 }}
-          />
+    <div className="auth">
+      <div className="auth-card">
+        <div className="auth-head">
+          <div className="logo big" />
+          <h1>Entrar</h1>
+          <p>Acesse o painel do RBAC</p>
         </div>
 
-        <div style={{ marginBottom: 12 }}>
-          <label>Senha</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ width: "100%", padding: 10 }}
-          />
-        </div>
+        <form onSubmit={submit} className="auth-form">
+          <label>
+            Email
+            <input value={email} onChange={(e) => setEmail(e.target.value)} />
+          </label>
 
-        <button disabled={loading} style={{ padding: 10, width: "100%" }}>
-          {loading ? "Entrando..." : "Entrar"}
-        </button>
+          <label>
+            Senha
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </label>
 
-        {error && (
-          <p style={{ marginTop: 12, color: "crimson" }}>{error}</p>
-        )}
-      </form>
+          {error && <div className="alert">{error}</div>}
+
+          <button className="btn" disabled={loading}>
+            {loading ? "Entrando" : "Entrar"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
