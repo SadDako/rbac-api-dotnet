@@ -19,3 +19,11 @@ publish/
 appsettings.Development.json
 appsettings.*.json
 .env
+
+
+**/bin/
+**/obj/
+**/.vs/
+**/node_modules/
+**/dist/
+**/.vite/
