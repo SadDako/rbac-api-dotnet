@@ -9,6 +9,7 @@ import ProtectedRoute from "./auth/ProtectedRoute";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
+import NotFound from "./pages/NotFound";
 import Layout from "./ui/Layout";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -22,8 +23,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="*" element={<NotFound />} />
             </Route>
           </Route>
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
