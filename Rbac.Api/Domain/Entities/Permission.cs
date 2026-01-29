@@ -1,13 +1,11 @@
-using Rbac.Api.Domain.Entities;
-
 namespace Rbac.Api.Domain.Entities;
 
-public class Role
+public class Permission
 {
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    public string Name { get; set; } = string.Empty;
+    public string Key { get; set; } = string.Empty; // ex: "users.read"
+    public string Description { get; set; } = string.Empty;
 
-    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
 }

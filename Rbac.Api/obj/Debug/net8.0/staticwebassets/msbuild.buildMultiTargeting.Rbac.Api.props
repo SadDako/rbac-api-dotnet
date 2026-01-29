@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\Rbac.Api.props" />
-</Project>
