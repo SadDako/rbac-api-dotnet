@@ -27,3 +27,5 @@ appsettings.*.json
 **/node_modules/
 **/dist/
 **/.vite/
+*.patch
+*.zip
