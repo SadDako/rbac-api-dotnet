@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import Button from "./Button";
@@ -16,6 +17,25 @@ function getPageTitle(pathname: string) {
 export default function Layout() {
   const { me, logout } = useAuth();
   const location = useLocation();
+  const roleText = me?.roles?.length ? me.roles.join(" · ") : "Sem roles";
+  const initials = me?.name?.charAt(0) ?? "U";
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("rbac-activity");
+      const history = stored ? (JSON.parse(stored) as Array<{ id: string; label: string; at: string }>) : [];
+      const entry = {
+        id: `${Date.now()}`,
+        label: `Visitou ${getPageTitle(location.pathname)}`,
+        at: new Date().toISOString(),
+      };
+      const next = [entry, ...history].slice(0, 12);
+      localStorage.setItem("rbac-activity", JSON.stringify(next));
+      window.dispatchEvent(new Event("rbac-activity"));
+    } catch {
+      // ignore storage errors
+    }
+  }, [location.pathname]);
 
   return (
     <div className="app-shell">
@@ -43,12 +63,16 @@ export default function Layout() {
         <div className="sidebar-footer">
           <div className="user-summary">
             <div className="avatar" aria-hidden="true">
-              {me?.name?.charAt(0) ?? "U"}
+              {initials}
             </div>
             <div>
               <strong>{me?.name ?? "Usuário"}</strong>
               <span>{me?.email ?? ""}</span>
             </div>
+          </div>
+          <div className="sidebar-status">
+            <span className="status-dot" />
+            <span>Sessão ativa</span>
           </div>
           <Button variant="ghost" onClick={logout} className="logout-btn">
             Sair
@@ -65,7 +89,7 @@ export default function Layout() {
           <div className="topbar-actions">
             <div className="user-pill">
               <span>{me?.name ?? "Usuário"}</span>
-              <small>{me?.roles?.join(" · ") ?? ""}</small>
+              <small>{roleText}</small>
             </div>
             <Button variant="outline" onClick={logout}>
               Logout
@@ -74,7 +98,9 @@ export default function Layout() {
         </header>
 
         <main className="content">
-          <Outlet />
+          <div className="route-frame" key={location.pathname}>
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

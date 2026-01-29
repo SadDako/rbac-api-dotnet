@@ -5,6 +5,7 @@ import Alert from "../ui/Alert";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
+import Skeleton from "../ui/Skeleton";
 import Spinner from "../ui/Spinner";
 
 export default function Admin() {
@@ -37,9 +38,16 @@ export default function Admin() {
     <div className="admin">
       <Card title="Área Administrativa" description="Acesso restrito a usuários Admin.">
         {loading && (
-          <div className="inline-status">
-            <Spinner size="sm" />
-            <span>Carregando permissões...</span>
+          <div className="admin-loading">
+            <div className="inline-status">
+              <Spinner size="sm" />
+              <span>Carregando permissões...</span>
+            </div>
+            <div className="skeleton-stack">
+              <Skeleton className="skeleton-line" />
+              <Skeleton className="skeleton-line" />
+              <Skeleton className="skeleton-line skeleton-line--short" />
+            </div>
           </div>
         )}
 
@@ -66,6 +74,17 @@ export default function Admin() {
               <Badge variant="success">Admin</Badge>
               <h3>Permissões carregadas</h3>
               <p>Você possui acesso ao painel administrativo.</p>
+              <div className="admin-tools">
+                <div>
+                  <strong>Admin Tools</strong>
+                  <p>Gerencie roles, políticas RBAC e segurança do tenant.</p>
+                </div>
+                <ul>
+                  <li>Gerenciar usuários e convites</li>
+                  <li>Políticas de acesso e auditoria</li>
+                  <li>Revisão de permissões críticas</li>
+                </ul>
+              </div>
               <Button variant="outline" onClick={() => nav("/")}>
                 Voltar ao Dashboard
               </Button>
