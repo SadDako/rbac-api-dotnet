@@ -1,5 +1,21 @@
 import { API_BASE_URL } from "./config";
 
+export type ApiErrorCode = "NETWORK" | "UNAUTHORIZED" | "FORBIDDEN" | "UNKNOWN";
+
+export class ApiError extends Error {
+  status?: number;
+  code?: ApiErrorCode;
+  details?: unknown;
+
+  constructor(message: string, options?: { status?: number; code?: ApiErrorCode; details?: unknown }) {
+    super(message);
+    this.name = "ApiError";
+    this.status = options?.status;
+    this.code = options?.code;
+    this.details = options?.details;
+  }
+}
+
 const isDev = import.meta.env.DEV;
 
 function logDebug(message: string, data?: unknown) {
@@ -21,12 +37,23 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${path}`;
   logDebug("request", { url, method: options.method || "GET" });
 
-  const res = await fetch(url, { ...options, headers });
+  let res: Response;
+  try {
+    res = await fetch(url, { ...options, headers });
+  } catch (error) {
+    logDebug("network-error", error);
+    throw new ApiError(
+      "Não foi possível conectar ao servidor. Verifique se a API está online.",
+      { code: "NETWORK" }
+    );
+  }
 
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
+    let details: unknown;
     try {
       const body = await res.json();
+      details = body;
       msg = body?.message || msg;
     } catch {
       // ignore JSON parse errors
@@ -40,9 +67,22 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
+      throw new ApiError("Sessão expirada. Faça login novamente.", {
+        status: res.status,
+        code: "UNAUTHORIZED",
+        details,
+      });
     }
 
-    throw new Error(msg);
+    if (res.status === 403) {
+      throw new ApiError("Acesso negado para este recurso.", {
+        status: res.status,
+        code: "FORBIDDEN",
+        details,
+      });
+    }
+
+    throw new ApiError(msg, { status: res.status, code: "UNKNOWN", details });
   }
 
   return res;

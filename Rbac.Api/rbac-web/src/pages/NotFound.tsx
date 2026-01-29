@@ -11,9 +11,11 @@ export default function NotFound() {
           <h1>404</h1>
           <p>Página não encontrada. Verifique o endereço informado.</p>
         </div>
-        <Link className="btn btn--primary" to={isAuthenticated ? "/" : "/login"}>
-          {isAuthenticated ? "Voltar ao Dashboard" : "Ir para Login"}
-        </Link>
+        <div className="not-found__actions">
+          <Link className="btn btn--primary" to={isAuthenticated ? "/" : "/login"}>
+            {isAuthenticated ? "Voltar ao Dashboard" : "Ir para Login"}
+          </Link>
+        </div>
       </div>
     </div>
   );
