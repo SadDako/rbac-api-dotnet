@@ -1,41 +1,88 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { logActivity } from "../activity";
 import { useAuth } from "../auth/AuthContext";
 import Button from "./Button";
+import CommandPalette from "./CommandPalette";
 
-const navLinks = [
-  { label: "Dashboard", to: "/" },
-  { label: "Admin", to: "/admin" },
-];
+type NavItem = {
+  label: string;
+  to: string;
+  requiresAdmin?: boolean;
+};
 
-function getPageTitle(pathname: string) {
-  if (pathname.startsWith("/admin")) return "Admin";
-  if (pathname === "/") return "Dashboard";
-  return "RBAC Web";
-}
+type NavGroup = {
+  title: string;
+  links: NavItem[];
+};
+
+const pageTitles: Record<string, string> = {
+  "/": "Dashboard",
+  "/admin": "Admin",
+  "/playground": "RBAC Playground",
+  "/account": "My Account",
+  "/users": "Users",
+  "/roles": "Roles",
+  "/permissions": "Permissions Matrix",
+  "/access-denied": "Access Denied",
+};
 
 export default function Layout() {
   const { me, logout } = useAuth();
   const location = useLocation();
-  const roleText = me?.roles?.length ? me.roles.join(" · ") : "Sem roles";
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const roleText = me?.roles?.length ? me.roles.join(" · ") : "No roles";
   const initials = me?.name?.charAt(0) ?? "U";
+  const isAdmin = useMemo(
+    () => (me?.roles ?? []).some((role) => role.toLowerCase() === "admin"),
+    [me?.roles]
+  );
+
+  const navGroups: NavGroup[] = [
+    {
+      title: "Main",
+      links: [
+        { label: "Dashboard", to: "/" },
+        { label: "Playground", to: "/playground" },
+        { label: "My Account", to: "/account" },
+      ],
+    },
+    {
+      title: "Administration",
+      links: [
+        { label: "Admin", to: "/admin", requiresAdmin: true },
+        { label: "Users", to: "/users", requiresAdmin: true },
+        { label: "Roles", to: "/roles", requiresAdmin: true },
+        { label: "Permissions", to: "/permissions", requiresAdmin: true },
+      ],
+    },
+  ];
+
+  const pageTitle =
+    pageTitles[location.pathname] ||
+    Object.entries(pageTitles).find(([path]) => location.pathname.startsWith(path))?.[1] ||
+    "RBAC Web";
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("rbac-activity");
-      const history = stored ? (JSON.parse(stored) as Array<{ id: string; label: string; at: string }>) : [];
-      const entry = {
-        id: `${Date.now()}`,
-        label: `Visitou ${getPageTitle(location.pathname)}`,
-        at: new Date().toISOString(),
-      };
-      const next = [entry, ...history].slice(0, 12);
-      localStorage.setItem("rbac-activity", JSON.stringify(next));
-      window.dispatchEvent(new Event("rbac-activity"));
-    } catch {
-      // ignore storage errors
+    logActivity({
+      type: "nav",
+      status: "success",
+      label: `Navigation: ${pageTitle}`,
+      description: `Visited ${location.pathname}.`,
+    });
+  }, [location.pathname, pageTitle]);
+
+  useEffect(() => {
+    function handleKeydown(event: KeyboardEvent) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setPaletteOpen((prev) => !prev);
+      }
     }
-  }, [location.pathname]);
+
+    window.addEventListener("keydown", handleKeydown);
+    return () => window.removeEventListener("keydown", handleKeydown);
+  }, []);
 
   return (
     <div className="app-shell">
@@ -44,19 +91,33 @@ export default function Layout() {
           <div className="logo" />
           <div>
             <span>RBAC Web</span>
-            <small>Controle de acesso</small>
+            <small>Access control platform</small>
           </div>
         </div>
 
         <nav className="sidebar-nav">
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
-            >
-              {link.label}
-            </NavLink>
+          {navGroups.map((group) => (
+            <div key={group.title} className="nav-group">
+              <p className="nav-group__title">{group.title}</p>
+              {group.links.map((link) => {
+                const disabled = link.requiresAdmin && !isAdmin;
+                return (
+                  <NavLink
+                    key={link.to}
+                    to={disabled ? "#" : link.to}
+                    className={({ isActive }) =>
+                      isActive ? "nav-link active" : disabled ? "nav-link disabled" : "nav-link"
+                    }
+                    onClick={(event) => {
+                      if (disabled) event.preventDefault();
+                    }}
+                  >
+                    {link.label}
+                    {disabled && <span className="nav-link__badge">Admin</span>}
+                  </NavLink>
+                );
+              })}
+            </div>
           ))}
         </nav>
 
@@ -66,16 +127,16 @@ export default function Layout() {
               {initials}
             </div>
             <div>
-              <strong>{me?.name ?? "Usuário"}</strong>
+              <strong>{me?.name ?? "User"}</strong>
               <span>{me?.email ?? ""}</span>
             </div>
           </div>
           <div className="sidebar-status">
             <span className="status-dot" />
-            <span>Sessão ativa</span>
+            <span>Session active</span>
           </div>
           <Button variant="ghost" onClick={logout} className="logout-btn">
-            Sair
+            Sign out
           </Button>
         </div>
       </aside>
@@ -83,12 +144,16 @@ export default function Layout() {
       <div className="app-main">
         <header className="topbar">
           <div>
-            <p className="eyebrow">Bem-vindo</p>
-            <h1>{getPageTitle(location.pathname)}</h1>
+            <p className="eyebrow">Welcome</p>
+            <h1>{pageTitle}</h1>
           </div>
           <div className="topbar-actions">
+            <Button variant="ghost" onClick={() => setPaletteOpen(true)} className="command-button">
+              <span>Command Palette</span>
+              <kbd>Ctrl + K</kbd>
+            </Button>
             <div className="user-pill">
-              <span>{me?.name ?? "Usuário"}</span>
+              <span>{me?.name ?? "User"}</span>
               <small>{roleText}</small>
             </div>
             <Button variant="outline" onClick={logout}>
@@ -103,6 +168,8 @@ export default function Layout() {
           </div>
         </main>
       </div>
+
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }
