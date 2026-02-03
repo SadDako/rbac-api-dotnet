@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { getActivityFeed } from "../activity";
+import type { ActivityEvent } from "../activity";
 import { ApiError, apiFetch } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import Alert from "../ui/Alert";
@@ -6,6 +8,7 @@ import Badge from "../ui/Badge";
 import Card from "../ui/Card";
 import Skeleton from "../ui/Skeleton";
 import Spinner from "../ui/Spinner";
+import ActivityFeed from "../ui/ActivityFeed";
 
 function parseJwtExpiration(token?: string | null) {
   if (!token) return null;
@@ -26,13 +29,13 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
-  const [activityFeed, setActivityFeed] = useState<Array<{ id: string; label: string; at: string }>>([]);
+  const [activityFeed, setActivityFeed] = useState<ActivityEvent[]>([]);
 
   useEffect(() => {
     setLoading(true);
     setError(null);
     const startedAt = performance.now();
-    apiFetch("/test/me")
+    apiFetch("/users/me")
       .then((r) => r.json())
       .then((data) => {
         setApiMe(data);
@@ -53,13 +56,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     function loadActivity() {
-      try {
-        const stored = localStorage.getItem("rbac-activity");
-        const parsed = stored ? (JSON.parse(stored) as Array<{ id: string; label: string; at: string }>) : [];
-        setActivityFeed(parsed);
-      } catch {
-        setActivityFeed([]);
-      }
+      setActivityFeed(getActivityFeed());
     }
 
     loadActivity();
@@ -245,7 +242,7 @@ export default function Dashboard() {
           )}
         </Card>
 
-        <Card title="API Connectivity" description="Latência estimada da API /test/me.">
+        <Card title="API Connectivity" description="Latência estimada da API /users/me.">
           <div className="connectivity-card">
             <div>
               <p className="section-label">Status</p>
@@ -374,28 +371,11 @@ export default function Dashboard() {
       </section>
 
       <section className="grid-2">
-        <Card title="Activity Feed" description="Ações recentes salvas localmente para demo.">
-          {activityFeed.length === 0 ? (
-            <div className="empty-state">
-              <strong>Nenhuma atividade recente</strong>
-              <p>Navegue pelo app para registrar eventos locais de demonstração.</p>
-            </div>
-          ) : (
-            <ul className="activity-list">
-              {activityFeed.map((item) => (
-                <li key={item.id} className="activity-item">
-                  <span className="activity-dot" aria-hidden="true" />
-                  <div>
-                    <strong>{item.label}</strong>
-                    <span>{new Date(item.at).toLocaleString()}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+        <Card title="Activity Feed" description="Eventos recentes com filtros e timeline.">
+          <ActivityFeed events={activityFeed} />
         </Card>
 
-        <Card title="Minha conta (API)" description="Dados retornados pelo endpoint /test/me.">
+        <Card title="Minha conta (API)" description="Dados retornados pelo endpoint /users/me.">
           {loading && (
             <div className="skeleton-stack">
               <Skeleton className="skeleton-line" />
@@ -449,7 +429,7 @@ export default function Dashboard() {
       </section>
 
       <Card
-        title="Retorno da API /test/me"
+        title="Retorno da API /users/me"
         description="Dados vindos diretamente do backend."
         className="code-card"
       >

@@ -17,7 +17,7 @@ export default function Admin() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    apiFetch("/test/admin")
+    apiFetch("/admin/ping")
       .then((r) => r.json())
       .then(setResult)
       .catch((err: unknown) => {
@@ -32,11 +32,9 @@ export default function Admin() {
       .finally(() => setLoading(false));
   }, []);
 
-  const isForbidden = error?.code === "FORBIDDEN";
-
   return (
     <div className="admin">
-      <Card title="Área Administrativa" description="Acesso restrito a usuários Admin.">
+      <Card title="Área Administrativa" description="Painel premium para controle RBAC.">
         {loading && (
           <div className="admin-loading">
             <div className="inline-status">
@@ -51,18 +49,7 @@ export default function Admin() {
           </div>
         )}
 
-        {!loading && error && isForbidden && (
-          <div className="callout">
-            <Alert variant="warning" title="403 · Acesso negado">
-              Seu usuário não possui permissão para visualizar este painel.
-            </Alert>
-            <Button variant="ghost" onClick={() => nav(-1)}>
-              Voltar
-            </Button>
-          </div>
-        )}
-
-        {!loading && error && !isForbidden && (
+        {!loading && error && (
           <Alert variant="error" title="Erro inesperado">
             {error.message}
           </Alert>
@@ -85,9 +72,14 @@ export default function Admin() {
                   <li>Revisão de permissões críticas</li>
                 </ul>
               </div>
-              <Button variant="outline" onClick={() => nav("/")}>
-                Voltar ao Dashboard
-              </Button>
+              <div className="admin-actions">
+                <Button variant="outline" onClick={() => nav("/users")}>
+                  Ir para Usuários
+                </Button>
+                <Button variant="ghost" onClick={() => nav("/permissions")}>
+                  Abrir Matriz de Permissões
+                </Button>
+              </div>
             </div>
             <pre className="code-block">{JSON.stringify(result, null, 2)}</pre>
           </div>

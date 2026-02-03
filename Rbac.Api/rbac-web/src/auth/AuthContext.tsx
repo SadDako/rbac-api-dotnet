@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
+import { logActivity } from "../activity";
 
 type Me = {
   token: string;
@@ -29,6 +30,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("me", JSON.stringify(data));
     setToken(data.token);
     setMe(data);
+    logActivity({
+      type: "auth",
+      status: "success",
+      label: `Login realizado`,
+      description: `Bem-vindo, ${data.name}.`,
+    });
   }
 
   function logout() {
@@ -36,6 +43,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("me");
     setToken(null);
     setMe(null);
+    logActivity({
+      type: "auth",
+      status: "success",
+      label: "Logout realizado",
+      description: "Sessão encerrada pelo usuário.",
+    });
   }
 
   const value = useMemo(
