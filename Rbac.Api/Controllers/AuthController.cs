@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Rbac.Api.Application.Auth;
 using Rbac.Api.Contracts.Auth;
+using Rbac.Api.Infrastructure.Http;
 
 namespace Rbac.Api.Controllers;
 
@@ -22,9 +23,9 @@ public class AuthController : ControllerBase
         {
             return Ok(await _auth.RegisterAsync(req));
         }
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException)
         {
-            return BadRequest(new { message = ex.Message });
+            return this.ToApiProblem(StatusCodes.Status409Conflict, "auth.email_already_exists", "This email is already registered.");
         }
     }
 
@@ -35,9 +36,9 @@ public class AuthController : ControllerBase
         {
             return Ok(await _auth.LoginAsync(req));
         }
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException)
         {
-            return Unauthorized(new { message = ex.Message });
+            return this.ToApiProblem(StatusCodes.Status401Unauthorized, "auth.invalid_credentials", "Invalid credentials.");
         }
     }
 }
