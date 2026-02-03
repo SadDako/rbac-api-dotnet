@@ -10,10 +10,13 @@ export default function NotFound() {
         <div>
           <h1>404</h1>
           <p>Página não encontrada. Verifique o endereço informado.</p>
+          <small className="muted">RBAC protege seus caminhos — volte para uma rota válida.</small>
         </div>
-        <Link className="btn btn--primary" to={isAuthenticated ? "/" : "/login"}>
-          {isAuthenticated ? "Voltar ao Dashboard" : "Ir para Login"}
-        </Link>
+        <div className="not-found__actions">
+          <Link className="btn btn--primary" to={isAuthenticated ? "/" : "/login"}>
+            {isAuthenticated ? "Voltar ao Dashboard" : "Ir para Login"}
+          </Link>
+        </div>
       </div>
     </div>
   );

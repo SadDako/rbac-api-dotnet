@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rbac.Api", "Rbac.Api\Rbac.Api.csproj", "{CD383A06-3709-42C7-8D13-F5E8584659F9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rbac.Api.Tests", "Rbac.Api.Tests\Rbac.Api.Tests.csproj", "{A8CC5B84-D4A6-49A7-B638-89CC90D6F297}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{CD383A06-3709-42C7-8D13-F5E8584659F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD383A06-3709-42C7-8D13-F5E8584659F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD383A06-3709-42C7-8D13-F5E8584659F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8CC5B84-D4A6-49A7-B638-89CC90D6F297}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8CC5B84-D4A6-49A7-B638-89CC90D6F297}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8CC5B84-D4A6-49A7-B638-89CC90D6F297}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8CC5B84-D4A6-49A7-B638-89CC90D6F297}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

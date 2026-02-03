@@ -1,7 +1,8 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using System.IdentityModel.Tokens.Jwt;
+using Rbac.Api.Application.Authorization;
 
 namespace Rbac.Api.Controllers;
 
@@ -15,7 +16,7 @@ public class TestAuthController : ControllerBase
     {
         return Ok(new
         {
-            sub = User.FindFirstValue(ClaimTypes.NameIdentifier),
+            sub = User.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? User.FindFirstValue(ClaimTypes.NameIdentifier),
             email = User.FindFirstValue(ClaimTypes.Email),
             name = User.FindFirstValue("name"),
             roles = User.FindAll(ClaimTypes.Role).Select(r => r.Value).ToArray()
@@ -23,9 +24,10 @@ public class TestAuthController : ControllerBase
     }
 
     [HttpGet("admin")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
+    [RequirePermission("admin.access")]
     public IActionResult AdminOnly()
     {
-        return Ok(new { ok = true, message = "Você é Admin ✅" });
+        return Ok(new { ok = true, message = "Admin access granted." });
     }
 }

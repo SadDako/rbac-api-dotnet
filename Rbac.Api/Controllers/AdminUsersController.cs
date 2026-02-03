@@ -1,14 +1,17 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Rbac.Api.Application.Authorization;
 using Rbac.Api.Domain.Entities;
 using Rbac.Api.Infrastructure.Data;
+using Rbac.Api.Infrastructure.Http;
 
 namespace Rbac.Api.Controllers;
 
 [ApiController]
 [Route("admin/users")]
-[Authorize(Roles = "Admin")]
+[Authorize]
+[RequirePermission("admin.access")]
 public class AdminUsersController : ControllerBase
 {
     private const string AdminRoleName = "Admin";
@@ -19,7 +22,6 @@ public class AdminUsersController : ControllerBase
         _db = db;
     }
 
-    // POST /admin/users/{userId}/promote-admin
     [HttpPost("{userId:guid}/promote-admin")]
     public async Task<IActionResult> PromoteToAdmin(Guid userId, CancellationToken ct)
     {
@@ -29,17 +31,23 @@ public class AdminUsersController : ControllerBase
             .FirstOrDefaultAsync(u => u.Id == userId, ct);
 
         if (user is null)
-            return NotFound(new { message = "Usuário não encontrado." });
+        {
+            return this.ToApiProblem(StatusCodes.Status404NotFound, "users.not_found", "User was not found.");
+        }
 
         var adminRole = await _db.Roles
             .FirstOrDefaultAsync(r => r.Name == AdminRoleName, ct);
 
         if (adminRole is null)
-            return NotFound(new { message = "Role Admin não existe. Rode o seed." });
+        {
+            return this.ToApiProblem(StatusCodes.Status404NotFound, "roles.not_found", "Admin role was not found.");
+        }
 
         var alreadyAdmin = user.UserRoles.Any(ur => ur.Role.Name == AdminRoleName);
         if (alreadyAdmin)
-            return Ok(new { message = "Usuário já é Admin.", userId });
+        {
+            return Ok(new { message = "User is already admin.", userId });
+        }
 
         user.UserRoles.Add(new UserRole
         {
@@ -49,10 +57,9 @@ public class AdminUsersController : ControllerBase
 
         await _db.SaveChangesAsync(ct);
 
-        return Ok(new { message = "Usuário promovido para Admin.", userId });
+        return Ok(new { message = "User promoted to admin.", userId });
     }
 
-    // POST /admin/users/{userId}/demote-admin
     [HttpPost("{userId:guid}/demote-admin")]
     public async Task<IActionResult> DemoteFromAdmin(Guid userId, CancellationToken ct)
     {
@@ -62,17 +69,21 @@ public class AdminUsersController : ControllerBase
             .FirstOrDefaultAsync(u => u.Id == userId, ct);
 
         if (user is null)
-            return NotFound(new { message = "Usuário não encontrado." });
+        {
+            return this.ToApiProblem(StatusCodes.Status404NotFound, "users.not_found", "User was not found.");
+        }
 
         var adminLink = user.UserRoles
             .FirstOrDefault(ur => ur.Role.Name == AdminRoleName);
 
         if (adminLink is null)
-            return Ok(new { message = "Usuário não é Admin.", userId });
+        {
+            return Ok(new { message = "User is not admin.", userId });
+        }
 
         _db.UserRoles.Remove(adminLink);
         await _db.SaveChangesAsync(ct);
 
-        return Ok(new { message = "Admin removido do usuário.", userId });
+        return Ok(new { message = "Admin role removed from user.", userId });
     }
 }

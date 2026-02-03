@@ -6,4 +6,5 @@ public class UserProfileResponse
     public string Email { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public IReadOnlyCollection<string> Roles { get; set; } = Array.Empty<string>();
+    public IReadOnlyCollection<string> Permissions { get; set; } = Array.Empty<string>();
 }

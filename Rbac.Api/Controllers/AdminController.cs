@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rbac.Api.Application.Authorization;
+using Rbac.Api.Infrastructure.Http;
 
 namespace Rbac.Api.Controllers;
 
 [ApiController]
 [Route("admin")]
-[Authorize(Roles = "Admin")]
+[Authorize]
+[RequirePermission("admin.access")]
 public class AdminController : ControllerBase
 {
     // GET /admin/ping
@@ -15,7 +18,9 @@ public class AdminController : ControllerBase
         return Ok(new
         {
             message = "pong",
-            atUtc = DateTime.UtcNow
+            atUtc = DateTime.UtcNow,
+            traceId = HttpContext.TraceIdentifier,
+            correlationId = HttpContext.GetCorrelationId()
         });
     }
 
@@ -26,6 +31,8 @@ public class AdminController : ControllerBase
         return Ok(new
         {
             isAuthenticated = User.Identity?.IsAuthenticated,
+            traceId = HttpContext.TraceIdentifier,
+            correlationId = HttpContext.GetCorrelationId(),
             claims = User.Claims.Select(c => new
             {
                 c.Type,

@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore backend
+        run: dotnet restore ProjetoC#.sln
+
+      - name: Build backend
+        run: dotnet build ProjetoC#.sln --configuration Release --no-restore
+
+      - name: Test backend
+        run: dotnet test ProjetoC#.sln --configuration Release --no-build
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: Rbac.Api/rbac-web/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: Rbac.Api/rbac-web
+        run: npm ci
+
+      - name: Lint frontend
+        working-directory: Rbac.Api/rbac-web
+        run: npm run lint
+
+      - name: Test frontend
+        working-directory: Rbac.Api/rbac-web
+        run: npm run test
+
+      - name: Build frontend
+        working-directory: Rbac.Api/rbac-web
+        run: npm run build
