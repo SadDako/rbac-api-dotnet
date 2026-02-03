@@ -1,34 +1,137 @@
-# RBAC API – ASP.NET Core (.NET 8)
+# RBAC System (.NET 8 + React/Vite)
 
-API REST desenvolvida em C# com foco em autenticação segura e controle de acesso baseado em papéis (RBAC – Role Based Access Control).
+Production-style RBAC demo with JWT auth, permission-based authorization, structured observability, activity feed, and CI.
 
-Projeto criado com objetivo de estudo avançado e empregabilidade, seguindo padrões comuns utilizados em ambientes corporativos.
+## Stack
 
----
+- Backend: ASP.NET Core (.NET 8), EF Core, PostgreSQL
+- Frontend: React, Vite, TypeScript
+- Auth: JWT (`localStorage.token`)
+- Authorization: RBAC (roles + permissions + policy attribute)
 
-## 🎯 Objetivo
+## Local URLs
 
-Construir uma API back-end profissional utilizando ASP.NET Core, com:
+- Backend: `http://localhost:5083`
+- Frontend: `http://localhost:5173`
 
-- Autenticação via JWT
-- Autorização baseada em roles
-- Persistência de dados com PostgreSQL
-- Estrutura de código organizada e escalável
+## How To Run
 
-Este projeto será utilizado como portfólio técnico no GitHub e currículo.
+### Backend
 
----
+```bash
+dotnet restore ProjetoC#.sln
+dotnet build ProjetoC#.sln
+dotnet run --project Rbac.Api/Rbac.Api.csproj
+```
 
-## 🧱 Tecnologias Utilizadas
+### Frontend
 
-- C# / .NET 8 (ASP.NET Core Web API)
-- Entity Framework Core
-- PostgreSQL
-- JWT (JSON Web Token)
-- Swagger (OpenAPI)
-- Git / GitHub
+```bash
+cd Rbac.Api/rbac-web
+npm install
+npm run dev
+```
 
----
-    
-## 🗂 Estrutura do Projeto
+### Quality checks
 
+```bash
+dotnet test ProjetoC#.sln
+cd Rbac.Api/rbac-web
+npm run lint
+npm run test
+npm run build
+```
+
+## Error Contract (RFC 7807)
+
+All backend errors return ProblemDetails with these fields:
+
+- `traceId`
+- `correlationId`
+- `code` (example: `auth.invalid_credentials`, `rbac.forbidden`)
+- `message` (friendly text)
+
+Standardized for `401`, `403`, `404`, `500`.
+
+## Correlation ID
+
+- Header accepted/generated: `X-Correlation-Id`
+- Frontend sends one per request
+- Backend returns it in response header and error payload
+
+## Default Dev Credentials
+
+- Email: `admin@rbac.local`
+- Password: `Admin@123`
+
+In development, startup seed creates:
+
+- roles: `Admin`, `User`
+- default permissions
+- admin user with full permissions
+
+## Main Routes (Frontend)
+
+- `/login` (public)
+- `/` (protected)
+- `/admin` (protected + admin/permission)
+- `/playground`
+- `/account`
+- `/users`
+- `/roles`
+- `/permissions`
+- `/access-denied`
+- `/not-found`
+
+## Main Endpoints (Backend)
+
+### Auth
+
+- `POST /auth/register`
+- `POST /auth/login`
+
+### User profile and users
+
+- `GET /users/me`
+- `GET /users`
+- `GET /users/{id}`
+- `POST /users/{id}/roles`
+- `DELETE /users/{id}/roles/{roleId}`
+
+### Roles and permissions
+
+- `GET /roles`
+- `POST /roles`
+- `PUT /roles/{id}`
+- `DELETE /roles/{id}`
+- `PUT /roles/{id}/permissions`
+- `GET /permissions`
+
+### Activity feed
+
+- `GET /activity?limit=50`
+- `POST /activity`
+
+## Default Permission Keys
+
+- `admin.access`
+- `users.me.read`
+- `users.read`
+- `users.roles.assign`
+- `users.roles.remove`
+- `roles.read`
+- `roles.create`
+- `roles.update`
+- `roles.delete`
+- `roles.permissions.update`
+- `permissions.read`
+- `activity.read`
+- `activity.write`
+
+## CI
+
+GitHub Actions workflow (`.github/workflows/ci.yml`) runs:
+
+1. Backend restore/build/test
+2. Frontend `npm ci`
+3. Frontend lint/test/build
