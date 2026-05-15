@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="6.8.0" />
+    <PackageReference Include="Moq" Version="4.18.5" />
+    <PackageReference Include="xunit" Version="2.6.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.6.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Rbac.Application\Rbac.Application.csproj" />
+    <ProjectReference Include="..\..\src\Rbac.Domain\Rbac.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Rbac.Infrastructure\Rbac.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Rbac.Shared\Rbac.Shared.csproj" />
+  </ItemGroup>
+</Project>
