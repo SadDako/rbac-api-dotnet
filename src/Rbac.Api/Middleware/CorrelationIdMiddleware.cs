@@ -25,7 +25,7 @@ public sealed class CorrelationIdMiddleware
         {
             if (!context.Response.Headers.ContainsKey(HeaderKey))
             {
-                context.Response.Headers.Add(HeaderKey, correlation.ToString());
+                context.Response.Headers.Append(HeaderKey, correlation.ToString());
             }
             return Task.CompletedTask;
         });

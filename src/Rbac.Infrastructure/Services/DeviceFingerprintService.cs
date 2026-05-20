@@ -53,12 +53,10 @@ public sealed class DeviceFingerprintService : IDeviceFingerprintService
     {
         var fingerprint = descriptor.Fingerprint;
         var stored = await _repository.GetByUserAndFingerprintAsync(userId, fingerprint, cancellationToken);
-        var isNewDevice = false;
         var isSuspicious = false;
 
         if (stored is null)
         {
-            isNewDevice = true;
             descriptor.UserId = userId;
             descriptor.FirstSeenAtUtc = DateTime.UtcNow;
             descriptor.LastSeenAtUtc = DateTime.UtcNow;

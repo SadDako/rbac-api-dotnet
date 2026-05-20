@@ -73,7 +73,6 @@ public sealed class SecurityThreatMiddleware
         {
             Activity.Current?.SetTag("security.risk_score", score);
             Activity.Current?.SetTag("security.signals", string.Join(",", signals));
-            context.Response.Headers["X-Adaptive-Risk"] = score.ToString(System.Globalization.CultureInfo.InvariantCulture);
         }
 
         if (score >= 70)

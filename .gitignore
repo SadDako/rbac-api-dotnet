@@ -1,4 +1,4 @@
-# build output
+# Build output
 bin/
 obj/
 out/
@@ -10,12 +10,33 @@ publish/
 .idea/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
 
-# logs/cache
+# Logs / caches
 *.log
 *.cache
+TestResults/
+.coverage
 
-# secrets
-appsettings.Development.json
-appsettings.*.json
+# .NET user secrets
+secrets.json
+
+# Secrets / local env
 .env
+.env.*
+!.env.example
+appsettings.Development.json
+appsettings.Local.json
+appsettings.Production.json
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Node (frontend dev artifacts, if any are added later)
+node_modules/
+dist/
+
+# EF Core generated files we do NOT want to ignore (keep migrations)
+!**/Migrations/**

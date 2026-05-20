@@ -6,7 +6,6 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Rbac.Api.Middleware;
-using Rbac.Shared.Options;
 
 namespace Rbac.Api.Extensions;
 
@@ -33,15 +32,7 @@ public static class ObservabilityExtensions
                     .AddSource("Rbac.Api")
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddEntityFrameworkCoreInstrumentation()
-                    .AddOtlpExporter(otlpOptions =>
-                    {
-                        var endpoint = configuration.GetValue<string>("OpenTelemetry:OtlpEndpoint");
-                        if (!string.IsNullOrWhiteSpace(endpoint))
-                        {
-                            otlpOptions.Endpoint = new Uri(endpoint);
-                        }
-                    });
+                    .AddEntityFrameworkCoreInstrumentation();
             })
             .WithMetrics(metrics =>
             {

@@ -103,10 +103,22 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-app.UseForwardedHeaders(new ForwardedHeadersOptions
+var forwardedOptions = new ForwardedHeadersOptions
 {
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    ForwardLimit = 1
+};
+forwardedOptions.KnownNetworks.Clear();
+forwardedOptions.KnownProxies.Clear();
+var trustedProxies = builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>() ?? Array.Empty<string>();
+foreach (var proxy in trustedProxies)
+{
+    if (System.Net.IPAddress.TryParse(proxy, out var ip))
+    {
+        forwardedOptions.KnownProxies.Add(ip);
+    }
+}
+app.UseForwardedHeaders(forwardedOptions);
 
 app.UseCorrelationId();
 app.UseMiddleware<Rbac.Api.Middleware.SecurityThreatMiddleware>();
@@ -142,7 +154,12 @@ app.Use((context, next) =>
         context.Response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload";
     }
     context.Response.Headers["X-XSS-Protection"] = "0";
-    context.Response.Headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';";
+
+    var path = context.Request.Path.Value ?? string.Empty;
+    var isSwaggerUi = path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase);
+    context.Response.Headers["Content-Security-Policy"] = isSwaggerUi
+        ? "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'self';"
+        : "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';";
     return next(context);
 });
 

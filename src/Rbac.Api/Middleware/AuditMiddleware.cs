@@ -41,10 +41,9 @@ public sealed class AuditMiddleware
             await _next(context);
             statusCode = context.Response.StatusCode;
         }
-        catch (Exception ex)
+        catch
         {
-            statusCode = 500;
-            // track exception metric via Telemetry if available
+            statusCode = StatusCodes.Status500InternalServerError;
             throw;
         }
         finally
